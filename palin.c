@@ -7,13 +7,6 @@
 bool is_palindrome(char *string);
 
 int main(int argc, char **argv) {
-//	char *strings[] = {"test", "radar", "Rotor", "aB0bA", "here"};
-//	int i;
-//	for (i = 0; i < 5; i++) {
-//		char *string = strings[i];
-//		printf("%s, %s\n", string, is_palindrome(string) ? "true" : "false");
-//	}
-	
 	return EXIT_SUCCESS;
 }
 
