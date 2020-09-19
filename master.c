@@ -32,7 +32,6 @@ int main(int argc, char **argv) {
 		switch (c) {
 			case 'h':
 				usage(EXIT_SUCCESS);
-				break;
 			case 'n':
 				if (isdigit(*optarg)) {
 					total_child_count = atoi(optarg);
@@ -62,9 +61,14 @@ int main(int argc, char **argv) {
 		}
 	}
 	
+	if (argv[optind] == NULL || argc > optind + 1) {
+		error("invalid arguments specified");
+		ok = false;
+	}
+	
 	if (!ok) usage(EXIT_FAILURE);
 	
-	// TODO
+	// input file specified
 	
 	return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
@@ -115,4 +119,5 @@ void usage(int status) {
 		printf("       -s x     : Number of children allowed to exist concurrently\n");
 		printf("       -t time  : Time, in seconds, after which the program will terminate\n");
 	}
+	exit(status);
 }
