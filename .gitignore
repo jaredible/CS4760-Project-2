@@ -2,3 +2,6 @@ master
 master.o
 palin
 palin.o
+palin.out
+nopalin.out
+output.log
