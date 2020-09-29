@@ -21,4 +21,4 @@ $(TARGET2): $(OBJS2)
 .PHONY: clean
 
 clean:
-	/bin/rm -f $(TARGET1) $(TARGET2) *.o
+	/bin/rm -f $(TARGET1) $(TARGET2) *.o *.out *.log
