@@ -31,7 +31,7 @@ int i;
 int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
-	signal(SIGTERM, terminateSignalHandler);
+//	signal(SIGTERM, terminateSignalHandler);
 //	signal(SIGUSR1, timeoutSignalHandler);
 	
 	int index;
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 		index = atoi(argv[2]);
 	}
 	
-	printf("index: %d, ppid: %d, pid: %d\n", i, getppid(), getpid());
+//	printf("index: %d, ppid: %d, pid: %d\n", i, getppid(), getpid());
 	
 	srand(time(NULL) + i);
 	
