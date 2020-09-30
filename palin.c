@@ -31,7 +31,7 @@ int i;
 int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
-//	signal(SIGTERM, terminateSignalHandler);
+	signal(SIGTERM, terminateSignalHandler);
 //	signal(SIGUSR1, timeoutSignalHandler);
 	
 	int index;

@@ -147,9 +147,6 @@ int main(int argc, char **argv) {
 	
 	setupTimer(durationBeforeTermination * 1000);
 	
-//	while (true) {}
-//	return 0;
-	
 	int stringCount;
 	
 	if ((stringsSegmentID = shmget(stringsKey, sizeof(struct strings), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
@@ -158,7 +155,7 @@ int main(int argc, char **argv) {
 	} else {
 		strings = (struct strings*) shmat(stringsSegmentID, NULL, 0);
 		stringCount = loadStrings(argv[optind]);
-//		if (maximumChildCount != stringCount) maximumChildCount = stringCount;
+		if (maximumChildCount != stringCount) maximumChildCount = stringCount;
 	}
 	
 	if ((childrenSegmentID = shmget(childrenKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
@@ -248,6 +245,7 @@ int loadStrings(char* path) {
 }
 
 void spawnChild(int childIndex) {
+//	printf("childIndex: %d\n", childIndex);
 	bool canSpawnChild = currentConcurrentChildCount < concurrentChildCount && executedChildCount < maximumChildCount && executedChildCount < MAX_NUM_OF_PROCESSES_IN_SYSTEM;
 	if (canSpawnChild) {
 		spawn(childIndex);
@@ -263,7 +261,11 @@ void spawnChild(int childIndex) {
 
 void spawn(int childIndex) {
 	currentConcurrentChildCount++;
-	if (fork() == 0) {
+	pid_t pid = fork();
+	if (pid == -1) {
+		perror("fork: Failed to create a child process for palin");
+		exit(1);
+	} else if (pid == 0) {
 //		printf("[start] %d processes in system.\n", currentConcurrentChildCount);
 		if (childIndex == 0) *childProcessGroup = getpid();
 		setpgid(0, *childProcessGroup);
@@ -288,69 +290,15 @@ void killSignalHandler(int signal) {
 	
 	killpg(*childProcessGroup, SIGTERM);
 	
-//	pid_t cpid, w;
-//	int wstatus;
-//	do {
-//		printf("HERE\n");
-//		w = wait(&wstatus);
-//		w = waitpid(cpid, &wstatus, WUNTRACED | WCONTINUED);
-//		if (w == -1) {
-//			perror("waitpid");
-//			exit(EXIT_FAILURE);
-//		}
-//		
-//		if (WIFEXITED(wstatus)) {
-//			printf("exited, status=%d\n", WEXITSTATUS(wstatus));
-//		} else if (WIFSIGNALED(wstatus)) {
-//			printf("killed by signal %d\n", WTERMSIG(wstatus));
-//		} else if (WIFSTOPPED(wstatus)) {
-//			printf("stopped by signal %d\n", WSTOPSIG(wstatus));
-//		} else if (WIFCONTINUED(wstatus)) {
-//			printf("continued\n");
-//		}
-//	} while (!WIFEXITED(wstatus) && !WIFSIGNALED(wstatus));
-	
 	int status;
 	while (wait(&status) > 0) {
-//		printf("%d\n", status);
-		if (WIFEXITED(status))
-			printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
-		else
-			printf("ERROR: Child has not terminated correctly\n");
+		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
+		else printf("ERROR: Child has not terminated correctly\n");
 	}
-	
-//	int i = 0;
-//	for (; i < currentConcurrentChildCount; i++)
-//		wait(NULL);
 	
 	releaseMemory();
 	
 	exit(0);
-}
-
-void timerSignalHandler(int signal) {
-	if (time(0) - startTime >= durationBeforeTermination) {
-		printf("master: Timed out\n");
-		
-		killpg(*childProcessGroup, SIGUSR1);
-		
-//		int i = 0;
-//		for (; i < currentConcurrentChildCount; i++)
-//			wait(NULL);
-		
-		int status;
-		while (true) {
-			wait(&status);
-			printf("status: %d\n", status);
-		}
-		
-//		while (true)
-//			wait(NULL);
-		
-		releaseMemory();
-		
-		exit(0);
-	}
 }
 
 void releaseMemory() {
