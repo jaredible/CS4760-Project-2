@@ -10,67 +10,24 @@
 
 #include "shared.h"
 
-#define TEST 20
-
-void removeLogFiles();
-void removeNewline(char*);
 int loadStrings(char*);
+void setupTimer(int);
 void spawnChild(int);
-void spawn(int);
-void executeChild(int, int);
-void killSignalHandler(int);
-void timeoutSignalHandler(int);
-void releaseMemory();
-
-const int MAX_NUM_OF_PROCESSES_IN_SYSTEM = 20;
-int currentConcurrentChildCount = 0; // FIXME
-
-int spmKey;
-int spmSegmentID;
-struct SharedProcessMemory* spm;
-
-int status = 0;
-
-int startTime;
+void signalHandler(int);
 
 int n = 4;
 int s = 2;
-int executedChildCount = 0;
-int t = TEST;
-
-void setupTimer(int timeout) {
-	struct sigaction action;
-	memset(&action, 0, sizeof(action));
-	action.sa_handler = timeoutSignalHandler;
-	if (sigaction(SIGALRM, &action, NULL) != 0) {
-		perror("sigaction");
-		abort();
-	}
-	
-	struct itimerval timer;
-	timer.it_value.tv_sec = timeout / 1000;
-	timer.it_value.tv_usec = (timeout % 1000) * 1000;
-	
-	timer.it_interval.tv_sec = 0;
-	timer.it_interval.tv_usec = 0;
-	
-	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) {
-		perror("setitimer");
-		abort();
-	}
-}
+int t = PROGRAM_DURATION_MAX;
 
 int main(int argc, char** argv) {
-	printf("test: %d\n", test());
-	return 0;
-	
 	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
 	
-	signal(SIGINT, killSignalHandler);
+	signal(SIGINT, signalHandler);
 	
-	spmKey = ftok("Makefile", 'p');
-	
-	removeLogFiles();
+	remove("palin.out");
+	remove("nopalin.out");
+	remove("output.log");
 	
 	while (true) {
 		int c = getopt(argc, argv, "hn:s:t:");
@@ -89,91 +46,74 @@ int main(int argc, char** argv) {
 				printf("       -n x     : Maximum total of child processes\n");
 				printf("       -s x     : Number of children allowed to exist concurrently\n");
 				printf("       -t time  : Time, in seconds, after which the program will terminate\n");
-				exit(0);
+				exit(EXIT_SUCCESS);
 			case 'n':
 				n = atoi(optarg);
 				if (n < 0) {
 					fprintf(stderr, "Negative arguments are not valid\n");
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
 				break;
 			case 's':
 				s = atoi(optarg);
 				if (s < 0) {
 					fprintf(stderr, "Cannot spawn a negative number of children\n");
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
 				break;
 			case 't':
 				t = atoi(optarg);
-				if (t <= 0) {
-					fprintf(stderr, "Master can only have a run duration of positive time\n");
-					exit(1);
-				} else if (t > TEST) {
-					t = TEST;
+				if (t < 0) {
+					fprintf(stderr, "Master cannot have a run duration of negative time\n");
+					exit(EXIT_FAILURE);
+				} else if (t == 0) {
+					exit(EXIT_SUCCESS);
 				}
 				break;
 			default:
 				fprintf(stderr, "Default getopt statement\n");
-				exit(1);
+				exit(EXIT_FAILURE);
 		}
 	}
 	
-	setupTimer(t * 1000);
+	allocateSPM();
 	
-	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProcessMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for SPM");
-		exit(1);
-	} else {
-		spm = (struct SharedProcessMemory*) shmat(spmSegmentID, NULL, 0);
-	}
+	int c = loadStrings(argv[optind]);
+	n = MIN(c, TOTAL_PROCESSES_MAX);
+	s = MIN(s, n);
+	t = MIN(t, PROGRAM_DURATION_MAX);
 	
-	int stringCount = loadStrings(argv[optind]);
-	if (n != stringCount) n = stringCount;
-	spm->total = stringCount;
+	spm->total = n;
+	setupTimer(t);
 	
-	int childIndex = 0;
+//	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
 	
-	while (childIndex < s)
-		spawnChild(childIndex++);
-
-	while (currentConcurrentChildCount > 0) {
+	int i = 0;
+	int j = n;
+	
+	while (i < s)
+		spawnChild(i++);
+	
+	while (n >= 0) {
 		wait(NULL);
-		currentConcurrentChildCount--;
-//		printf("[finish] %d processes in system\n", currentConcurrentChildCount);
-		spawnChild(childIndex++);
+		if (i < j) spawnChild(i++);
+		n--;
 	}
 	
-	releaseMemory();
+	releaseSPM();
 	
-	return 0;
-}
-
-void removeLogFiles() {
-	remove("palin.out");
-	remove("nopalin.out");
-	remove("output.log");
-}
-
-void removeNewline(char* s) {
-	while (*s) {
-		if (*s == '\n') *s = '\0';
-		s++;
-	}
+	return EXIT_SUCCESS;
 }
 
 int loadStrings(char* path) {
 	FILE* fp = fopen(path, "r");
-	if (fp == NULL) {
-		perror("fopen: Failed to open file for loading strings");
-		exit(1);
-	}
+	if (fp == NULL) crash("fopen: Failed to open file for loading strings");
 	
 	int i = 0;
 	char* line = NULL;
 	size_t len = 0;
 	ssize_t read;
-	while ((read = getline(&line, &len, fp)) != -1) {
+	while (i < n && (read = getline(&line, &len, fp)) != -1) {
 		removeNewline(line);
 		strcpy(spm->strings[i++], line);
 	}
@@ -184,75 +124,49 @@ int loadStrings(char* path) {
 	return i;
 }
 
-void spawnChild(int childIndex) {
-	bool a = currentConcurrentChildCount < s;
-	bool b = executedChildCount < n;
-	bool c = executedChildCount < MAX_NUM_OF_PROCESSES_IN_SYSTEM;
-	bool canSpawnChild = a && b && c;
-	if (canSpawnChild) spawn(childIndex);
+void setupTimer(const int t) {
+	struct sigaction action;
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = signalHandler;
+	if (sigaction(SIGALRM, &action, NULL) != 0) crash("sigaction");
+	
+	struct itimerval timer;
+	timer.it_value.tv_sec = t;
+	timer.it_value.tv_usec = t;
+	
+	timer.it_interval.tv_sec = 0;
+	timer.it_interval.tv_usec = 0;
+	
+	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) crash("setitimer");
 }
 
-void spawn(int childIndex) {
-	executedChildCount++;
-	currentConcurrentChildCount++;
+void spawnChild(const int i) {
 	pid_t pid = fork();
-	if (pid == -1) {
-		perror("fork: Failed to create a child process for palin");
-		exit(1);
-	} else if (pid == 0) {
-//		printf("[start] %d processes in system.\n", currentConcurrentChildCount);
-		if (childIndex == 0) spm->pgid = getpid();
+	
+	if (pid == -1) crash("fork: Failed to create a child process for palin");
+	
+	if (pid == 0) {
+		if (i == 0) spm->pgid = getpid();
 		setpgid(0, spm->pgid);
-		executeChild(childIndex, childIndex);
-		exit(0);
+		
+		char id[256];
+		sprintf(id, "%d", i);
+		
+		execl("./palin", "palin", id, (char*) NULL);
+		exit(EXIT_SUCCESS);
 	}
 }
 
-void executeChild(int childIndex, int stringIndex) {
-	char ci[256];
-	sprintf(ci, "%d", childIndex);
-	
-	char si[256];
-	sprintf(si, "%d", stringIndex);
-	
-	execl("./palin", "palin", ci, si, (char*) NULL);
-}
-
-void killSignalHandler(int signal) {
-	printf("master: Exiting due to interrupt signal\n");
-	
-	killpg(spm->pgid, SIGTERM);
-	
-	int status;
-	while (wait(&status) > 0) {
-//		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
-//		else printf("ERROR: Child has not terminated correctly\n");
+void signalHandler(int s) {
+	printf("master: Exiting due to %s signal\n", s == SIGALRM ? "timeout" : "interrupt");
+	killpg(spm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
+	int i;
+	while (wait(NULL) > 0) {
+		i = 1e9;
+		while (i-- > 0);
+		fprintf(stderr, "wait: Child process took too long to terminate\n");
+		break;
 	}
-	
-	releaseMemory();
-	
-	exit(0);
-}
-
-void timeoutSignalHandler(int signal) {
-	printf("master: Exiting due to timeout signal\n");
-	
-	killpg(spm->pgid, SIGTERM);
-	
-	int status;
-	while (wait(&status) > 0) {
-//		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
-//		else printf("ERROR: Child has not terminated correctly\n");
-	}
-	
-	releaseMemory();
-	
-	exit(0);
-}
-
-void releaseMemory() {
-	printf("master: Releasing shared memory\n");
-	
-	shmdt(spm);
-	shmctl(spmSegmentID, IPC_RMID, NULL);
+	releaseSPM();
+	exit(EXIT_SUCCESS);
 }

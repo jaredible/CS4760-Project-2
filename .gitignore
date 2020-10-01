@@ -2,6 +2,7 @@ master
 master.o
 palin
 palin.o
+shared.o
 palin.out
 nopalin.out
 output.log

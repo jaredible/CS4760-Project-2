@@ -18,8 +18,16 @@
 #include <time.h>
 #include <unistd.h>
 
+#define PROGRAM_DURATION_MAX 100
 #define TOTAL_PROCESSES_MAX 20
 #define STRING_LENGTH_MAX 256
+#define CS_SLEEP_MIN 0
+#define CS_SLEEP_MAX 2
+#define FORMATTED_TIME_SIZE 50
+#define FORMATTED_TIME_FORMAT "%H:%M:%S"
+
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 enum state { idle, want_in, in_cs };
 
@@ -31,6 +39,17 @@ struct SharedProcessMemory {
 	pid_t pgid;
 };
 
-int test();
+int spmKey;
+int spmSegmentID;
+struct SharedProcessMemory* spm;
+
+void allocateSPM();
+void attachSPM();
+void releaseSPM();
+void logOutput(char*, char*, ...);
+char* getFormattedTime();
+void removeNewline(char*);
+void crash(char*);
+void strfcat(char*, char*, ...);
 
 #endif
