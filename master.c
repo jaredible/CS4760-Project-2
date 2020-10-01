@@ -78,7 +78,9 @@ int main(int argc, char** argv) {
 	
 	allocateSPM();
 	
-	int c = loadStrings(argv[optind]);
+	char* path = "infile";
+	if (argv[optind] != NULL) path = argv[optind];
+	int c = loadStrings(path);
 	n = MIN(c, TOTAL_PROCESSES_MAX);
 	s = MIN(s, n);
 	t = MIN(t, PROGRAM_DURATION_MAX);
