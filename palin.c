@@ -21,7 +21,7 @@ struct strings {
 
 bool isPalindrome(char*);
 void logPalin(bool, char*);
-void logChild(int, int, char*);
+void logChild(char*, int, int, char*);
 void terminateSignalHandler(int);
 void timeoutSignalHandler(int);
 char* getFormattedTime();
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 	fprintf(stderr, "%s: Process %d in critical section\n", getFormattedTime(), i);
 	sleep(rand() % 3);
 	logPalin(palindrome, string);
-	logChild(getpid(), i, string);
+	logChild(getFormattedTime(), getpid(), i, string);
 	fprintf(stderr, "%s: Process %d exiting critical section\n", getFormattedTime(), i);
 	
 	/* Exit critical section */
@@ -136,8 +136,6 @@ int main(int argc, char** argv) {
 	flags[i] = idle;
 	
 	/* Enter remainder section */
-	
-//	kill(getppid(), SIGUSR2);
 	
 	/* Exit remainder section */
 	
@@ -171,13 +169,13 @@ void logPalin(bool palindrome, char* string) {
 	fclose(fp);
 }
 
-void logChild(int pid, int index, char* string) {
+void logChild(char* time, int pid, int index, char* string) {
 	FILE* fp = fopen("output.log", "a+");
 	if (fp == NULL) {
 		perror("fopen: Failed to open file for child output");
 		exit(1);
 	}
-	fprintf(fp, "%d %d %s\n", pid, index, string);
+	fprintf(fp, "%s %d %d %s\n", time, pid, index, string);
 	fclose(fp);
 }
 

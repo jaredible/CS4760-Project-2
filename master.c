@@ -27,7 +27,7 @@ void spawnChild(int);
 void spawn(int);
 void executeChild(int, int);
 void killSignalHandler(int);
-void timerSignalHandler(int);
+void timeoutSignalHandler(int);
 void releaseMemory();
 
 const int MAX_NUM_OF_PROCESSES_IN_SYSTEM = 20;
@@ -57,15 +57,15 @@ int status = 0;
 
 int startTime;
 
-int maximumChildCount = 4;
-int concurrentChildCount = 2;
+int n = 4;
+int s = 2;
 int executedChildCount = 0;
-int durationBeforeTermination = TEST;
+int t = TEST;
 
 void setupTimer(int timeout) {
 	struct sigaction action;
 	memset(&action, 0, sizeof(action));
-	action.sa_handler = killSignalHandler;
+	action.sa_handler = timeoutSignalHandler;
 	if (sigaction(SIGALRM, &action, NULL) != 0) {
 		perror("sigaction");
 		abort();
@@ -84,11 +84,10 @@ void setupTimer(int timeout) {
 	}
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
 	signal(SIGINT, killSignalHandler);
-//	signal(SIGUSR2, timerSignalHandler);
 	
 	stringsKey = ftok("Makefile", 1);
 	childrenKey = ftok("Makefile", 2);
@@ -117,26 +116,26 @@ int main(int argc, char **argv) {
 				printf("       -t time  : Time, in seconds, after which the program will terminate\n");
 				exit(0);
 			case 'n':
-				maximumChildCount = atoi(optarg);
-				if (maximumChildCount < 0) {
+				n = atoi(optarg);
+				if (n < 0) {
 					fprintf(stderr, "Negative arguments are not valid\n");
 					exit(1);
 				}
 				break;
 			case 's':
-				concurrentChildCount = atoi(optarg);
-				if (concurrentChildCount < 0) {
+				s = atoi(optarg);
+				if (s < 0) {
 					fprintf(stderr, "Cannot spawn a negative number of children\n");
 					exit(1);
 				}
 				break;
 			case 't':
-				durationBeforeTermination = atoi(optarg);
-				if (durationBeforeTermination <= 0) {
+				t = atoi(optarg);
+				if (t <= 0) {
 					fprintf(stderr, "Master can only have a run duration of positive time\n");
 					exit(1);
-				} else if (durationBeforeTermination > TEST) {
-					durationBeforeTermination = TEST;
+				} else if (t > TEST) {
+					t = TEST;
 				}
 				break;
 			default:
@@ -145,7 +144,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	
-	setupTimer(durationBeforeTermination * 1000);
+	setupTimer(t * 1000);
 	
 	int stringCount;
 	
@@ -155,7 +154,7 @@ int main(int argc, char **argv) {
 	} else {
 		strings = (struct strings*) shmat(stringsSegmentID, NULL, 0);
 		stringCount = loadStrings(argv[optind]);
-		if (maximumChildCount != stringCount) maximumChildCount = stringCount;
+		if (n != stringCount) n = stringCount;
 	}
 	
 	if ((childrenSegmentID = shmget(childrenKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
@@ -187,14 +186,9 @@ int main(int argc, char **argv) {
 		childProcessGroup = (pid_t*) shmat(childProcessGroupSegmentID, NULL, 0);
 	}
 	
-//	while (true) {}
-//	return 0;
-	
-	startTime = time(0);
-	
 	int childIndex = 0;
 	
-	while (childIndex < concurrentChildCount)
+	while (childIndex < s)
 		spawnChild(childIndex++);
 
 	while (currentConcurrentChildCount > 0) {
@@ -245,21 +239,15 @@ int loadStrings(char* path) {
 }
 
 void spawnChild(int childIndex) {
-//	printf("childIndex: %d\n", childIndex);
-	bool canSpawnChild = currentConcurrentChildCount < concurrentChildCount && executedChildCount < maximumChildCount && executedChildCount < MAX_NUM_OF_PROCESSES_IN_SYSTEM;
-	if (canSpawnChild) {
-		spawn(childIndex);
-	} else {
-//		printf("HERE %d\n", childIndex);
-//		waitpid(-(*childProcessGroup), &status, 0);
-//		currentConcurrentChildCount--;
-//		printf("[idk] %d processes in system.\n", currentConcurrentChildCount);
-//		spawn(childIndex);
-	}
-	executedChildCount++;
+	bool a = currentConcurrentChildCount < s;
+	bool b = executedChildCount < n;
+	bool c = executedChildCount < MAX_NUM_OF_PROCESSES_IN_SYSTEM;
+	bool canSpawnChild = a && b && c;
+	if (canSpawnChild) spawn(childIndex);
 }
 
 void spawn(int childIndex) {
+	executedChildCount++;
 	currentConcurrentChildCount++;
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -269,7 +257,6 @@ void spawn(int childIndex) {
 //		printf("[start] %d processes in system.\n", currentConcurrentChildCount);
 		if (childIndex == 0) *childProcessGroup = getpid();
 		setpgid(0, *childProcessGroup);
-//		printf("[spawn] ppid: %d, pid: %d, childProcessGroup: %d\n", getppid(), getpid(), *childProcessGroup);
 		executeChild(childIndex, childIndex);
 		exit(0);
 	}
@@ -292,8 +279,24 @@ void killSignalHandler(int signal) {
 	
 	int status;
 	while (wait(&status) > 0) {
-		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
-		else printf("ERROR: Child has not terminated correctly\n");
+//		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
+//		else printf("ERROR: Child has not terminated correctly\n");
+	}
+	
+	releaseMemory();
+	
+	exit(0);
+}
+
+void timeoutSignalHandler(int signal) {
+	printf("master: Exiting due to timeout signal\n");
+	
+	killpg(*childProcessGroup, SIGTERM);
+	
+	int status;
+	while (wait(&status) > 0) {
+//		if (WIFEXITED(status)) printf("OK: Child exited with exit status: %d\n", WEXITSTATUS(status));
+//		else printf("ERROR: Child has not terminated correctly\n");
 	}
 	
 	releaseMemory();
