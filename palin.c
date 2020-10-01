@@ -53,8 +53,7 @@ void process(const int i) {
 	
 	fprintf(stderr, "%s: Process %d in critical section\n", getFormattedTime(), i);
 	sleep(rand() % (CS_SLEEP_MAX - CS_SLEEP_MIN + 1) + CS_SLEEP_MIN);
-	logOutput(palindrome ? "palin.out" : "nopalin.out", "%s\n", string);
-	logOutput("output.log", "%s %d %d %s\n", getFormattedTime(), getpid(), i, string);
+	logOutput(palindrome ? "palin.out" : "nopalin.out", "%s %d %d %s\n", getFormattedTime(), getpid(), i, string);
 	fprintf(stderr, "%s: Process %d exiting critical section\n", getFormattedTime(), i);
 	
 	/* Exit critical section */

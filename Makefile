@@ -28,3 +28,22 @@ $(PALIN): $(PALIN_OBJ) $(OBJ)
 .PHONY: clean
 clean:
 	/bin/rm -f $(OUTPUT) *.o *.out *.log
+
+strings.in:
+	echo a > strings.in
+	echo aA >> strings.in
+	echo ab >> strings.in
+	echo a0A >> strings.in
+	echo a0 >> strings.in
+	echo sTaTs >> strings.in
+	echo process >> strings.in
+	echo rAcEcAr >> strings.in
+	echo not a racecar >> strings.in
+
+test: all strings.in
+	./master -n 10 -s 4 -t 4 strings.in
+	cat palin.out; echo; cat nopalin.out; echo; cat output.log
+	rm palin.out nopalin.out output.log
+	echo
+	./master -n `wc -l <strings.in` -s 3 -t 2 strings.in
+	cat palin.out; echo; cat nopalin.out; echo; cat output.log

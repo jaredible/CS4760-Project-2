@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
 	
 	allocateSPM();
 	
+	// TODO
 	char* path = "infile";
 	if (argv[optind] != NULL) path = argv[optind];
 	int c = loadStrings(path);
@@ -88,18 +89,20 @@ int main(int argc, char** argv) {
 	spm->total = n;
 	setupTimer(t);
 	
-//	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
+	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
 	
 	int i = 0;
 	int j = n;
+	int nn = n;
 	
 	while (i < s)
 		spawnChild(i++);
 	
-	while (n >= 0) {
+	while (nn > 0) {
 		wait(NULL);
+		logOutput("output.log", "Process %d finished, processes in system %d\n", n - nn, nn);
 		if (i < j) spawnChild(i++);
-		n--;
+		nn--;
 	}
 	
 	releaseSPM();
@@ -150,6 +153,8 @@ void spawnChild(const int i) {
 	if (pid == 0) {
 		if (i == 0) spm->pgid = getpid();
 		setpgid(0, spm->pgid);
+		
+		logOutput("output.log", "Process %d starting, processes in system: %d\n", i, i + 1);
 		
 		char id[256];
 		sprintf(id, "%d", i);
