@@ -1,23 +1,4 @@
-#include <ctype.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <unistd.h>
-
-#define LINE_COUNT 100
-#define STRING_LENGTH 256
-
-enum state { idle, want_in, in_cs };
-
-struct strings {
-	char data[LINE_COUNT][STRING_LENGTH];
-};
+#include "shared.h"
 
 bool isPalindrome(char*);
 void logPalin(bool, char*);
@@ -32,7 +13,6 @@ int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
 	signal(SIGTERM, terminateSignalHandler);
-//	signal(SIGUSR1, timeoutSignalHandler);
 	
 	int index;
 	
@@ -44,79 +24,42 @@ int main(int argc, char** argv) {
 		index = atoi(argv[2]);
 	}
 	
-//	printf("index: %d, ppid: %d, pid: %d\n", i, getppid(), getpid());
-	
 	srand(time(NULL) + i);
 	
-	int N;
+	int spmKey = ftok("Makefile", 'p');
+	int spmSegmentID;
+	struct SharedProcessMemory* spm;
 	
-	int stringsKey = ftok("Makefile", 1);
-	int stringsSegmentID;
-	struct strings* strings;
-	
-	if ((stringsSegmentID = shmget(stringsKey, sizeof(struct strings), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for string array");
+	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProcessMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
+		perror("shmget: Failed to allocate shared memory for SPM");
 		exit(1);
 	} else {
-		strings = (struct strings*) shmat(stringsSegmentID, NULL, 0);
+		spm = (struct SharedProcessMemory*) shmat(spmSegmentID, NULL, 0);
 	}
 	
-	int childrenKey = ftok("Makefile", 2);
-	int childrenSegmentID;
-	int* children;
+	int N = spm->total;
 	
-	if ((childrenSegmentID = shmget(childrenKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate to shared memory for child count");
-		exit(1);
-	} else {
-		children = (int*) shmat(childrenSegmentID, NULL, 0);
-		N = *children;
-	}
-	
-	int flagsKey = ftok("Makefile", 3);
-	int flagsSegmentID;
-	int* flags;
-	
-	if ((flagsSegmentID = shmget(flagsKey, N * sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for flag array");
-		exit(1);
-	} else {
-		flags = (int*) shmat(flagsSegmentID, NULL, 0);
-	}
-	
-	int turnKey = ftok("Makefile", 4);
-	int turnSegmentID;
-	int* turn;
-	
-	if ((turnSegmentID = shmget(turnKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for turn");
-		exit(1);
-	} else {
-		turn = (int*) shmat(turnSegmentID, NULL, 0);
-	}
-	
-	char* string = strings->data[index];
+	char* string = spm->strings[index];
 	bool palindrome = isPalindrome(string);
-//	fprintf(stderr, "%s: Process %d determined that %s is %s\n", getFormattedTime(), i, string, palindrome ? "a palindrome" : "not a palindrome");
 	
 	fprintf(stderr, "%s: Process %d wants to enter critical section\n", getFormattedTime(), i);
 	
 	int j;
 	do {
-		flags[i] = want_in;
-		j = *turn;
+		spm->flags[i] = want_in;
+		j = spm->turn;
 		
 		while (j != i)
-			j = (flags[j] != idle) ? *turn : (j + 1) % N;
+			j = (spm->flags[j] != idle) ? spm->turn : (j + 1) % N;
 		
-		flags[i] = in_cs;
+		spm->flags[i] = in_cs;
 		
 		for (j = 0; j < N; j++)
-			if (j != i && flags[j] == in_cs)
+			if (j != i && spm->flags[j] == in_cs)
 				break;
-	} while (j < N || (*turn != i && flags[*turn] != idle));
+	} while (j < N || (spm->turn != i && spm->flags[spm->turn] != idle));
 	
-	*turn = i;
+	spm->turn = i;
 	
 	/* Enter critical section */
 	
@@ -128,15 +71,14 @@ int main(int argc, char** argv) {
 	
 	/* Exit critical section */
 	
-	j = (*turn + 1) % N;
-	while (flags[j] == idle)
+	j = (spm->turn + 1) % N;
+	while (spm->flags[j] == idle)
 		j = (j + 1) % N;
 	
-	*turn = j;
-	flags[i] = idle;
+	spm->turn = j;
+	spm->flags[i] = idle;
 	
 	/* Enter remainder section */
-	
 	/* Exit remainder section */
 	
 	return 0;

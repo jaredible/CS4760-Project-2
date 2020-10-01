@@ -1,24 +1,16 @@
-#include <ctype.h>
-#include <getopt.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <unistd.h>
+/* Title: Palindrome Finder
+ * Filename: master.c
+ * Usage: ./master -h
+ *        ./master [-n x] [-s x] [-t time] infile
+ * Author(s): Jared Diehl (jmddnb@umsystem.edu)
+ * Date: October 2, 2020
+ * Description: TODO
+ * Source(s): https://github.com/jeffcaljr/Unix-Concurrent-Processes-and-Shared-Memory/blob/master/master.cpp
+ *                TODO */
 
-#define LINE_COUNT 100
-#define STRING_LENGTH 256
-#define TEST 100
+#include "shared.h"
 
-struct strings {
-	char data[LINE_COUNT][STRING_LENGTH];
-};
+#define TEST 20
 
 void removeLogFiles();
 void removeNewline(char*);
@@ -33,25 +25,9 @@ void releaseMemory();
 const int MAX_NUM_OF_PROCESSES_IN_SYSTEM = 20;
 int currentConcurrentChildCount = 0; // FIXME
 
-int stringsKey;
-int stringsSegmentID;
-struct strings* strings;
-
-int childrenKey;
-int childrenSegmentID;
-int* children;
-
-int flagsKey;
-int flagsSegmentID;
-int *flags;
-
-int turnKey;
-int turnSegmentID;
-int *turn;
-
-int childProcessGroupKey;
-int childProcessGroupSegmentID;
-pid_t* childProcessGroup;
+int spmKey;
+int spmSegmentID;
+struct SharedProcessMemory* spm;
 
 int status = 0;
 
@@ -85,15 +61,14 @@ void setupTimer(int timeout) {
 }
 
 int main(int argc, char** argv) {
+	printf("test: %d\n", test());
+	return 0;
+	
 	setvbuf(stdout, NULL, _IONBF, 0);
 	
 	signal(SIGINT, killSignalHandler);
 	
-	stringsKey = ftok("Makefile", 1);
-	childrenKey = ftok("Makefile", 2);
-	flagsKey = ftok("Makefile", 3);
-	turnKey = ftok("Makefile", 4);
-	childProcessGroupKey = ftok("Makefile", 5);
+	spmKey = ftok("Makefile", 'p');
 	
 	removeLogFiles();
 	
@@ -105,7 +80,7 @@ int main(int argc, char** argv) {
 		switch (c) {
 			case 'h':
 				printf("NAME\n");
-				printf("       %s - palindrome finder");
+				printf("       %s - palindrome finder", argv[0]);
 				printf("\nUSAGE\n");
 				printf("       %s [-h]\n", argv[0]);
 				printf("       %s [-n x] [-s x] [-t time] infile", argv[0]);
@@ -146,45 +121,16 @@ int main(int argc, char** argv) {
 	
 	setupTimer(t * 1000);
 	
-	int stringCount;
-	
-	if ((stringsSegmentID = shmget(stringsKey, sizeof(struct strings), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for string array");
+	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProcessMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
+		perror("shmget: Failed to allocate shared memory for SPM");
 		exit(1);
 	} else {
-		strings = (struct strings*) shmat(stringsSegmentID, NULL, 0);
-		stringCount = loadStrings(argv[optind]);
-		if (n != stringCount) n = stringCount;
+		spm = (struct SharedProcessMemory*) shmat(spmSegmentID, NULL, 0);
 	}
 	
-	if ((childrenSegmentID = shmget(childrenKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for child count");
-		exit(1);
-	} else {
-		children = (int*) shmat(childrenSegmentID, NULL, 0);
-		*children = stringCount;
-	}
-	
-	if ((flagsSegmentID = shmget(flagsKey, *children * sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for flag array");
-		exit(1);
-	} else {
-		flags = (int*) shmat(flagsSegmentID, NULL, 0);
-	}
-	
-	if ((turnSegmentID = shmget(turnKey, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for turn");
-		exit(1);
-	} else {
-		turn = (int*) shmat(turnSegmentID, NULL, 0);
-	}
-	
-	if ((childProcessGroupSegmentID = shmget(childProcessGroupKey, sizeof(pid_t), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-		perror("shmget: Failed to allocate shared memory for group PID");
-		exit(1);
-	} else {
-		childProcessGroup = (pid_t*) shmat(childProcessGroupSegmentID, NULL, 0);
-	}
+	int stringCount = loadStrings(argv[optind]);
+	if (n != stringCount) n = stringCount;
+	spm->total = stringCount;
 	
 	int childIndex = 0;
 	
@@ -229,7 +175,7 @@ int loadStrings(char* path) {
 	ssize_t read;
 	while ((read = getline(&line, &len, fp)) != -1) {
 		removeNewline(line);
-		strcpy(strings->data[i++], line);
+		strcpy(spm->strings[i++], line);
 	}
 	
 	fclose(fp);
@@ -255,8 +201,8 @@ void spawn(int childIndex) {
 		exit(1);
 	} else if (pid == 0) {
 //		printf("[start] %d processes in system.\n", currentConcurrentChildCount);
-		if (childIndex == 0) *childProcessGroup = getpid();
-		setpgid(0, *childProcessGroup);
+		if (childIndex == 0) spm->pgid = getpid();
+		setpgid(0, spm->pgid);
 		executeChild(childIndex, childIndex);
 		exit(0);
 	}
@@ -275,7 +221,7 @@ void executeChild(int childIndex, int stringIndex) {
 void killSignalHandler(int signal) {
 	printf("master: Exiting due to interrupt signal\n");
 	
-	killpg(*childProcessGroup, SIGTERM);
+	killpg(spm->pgid, SIGTERM);
 	
 	int status;
 	while (wait(&status) > 0) {
@@ -291,7 +237,7 @@ void killSignalHandler(int signal) {
 void timeoutSignalHandler(int signal) {
 	printf("master: Exiting due to timeout signal\n");
 	
-	killpg(*childProcessGroup, SIGTERM);
+	killpg(spm->pgid, SIGTERM);
 	
 	int status;
 	while (wait(&status) > 0) {
@@ -307,18 +253,6 @@ void timeoutSignalHandler(int signal) {
 void releaseMemory() {
 	printf("master: Releasing shared memory\n");
 	
-	shmdt(strings);
-	shmctl(stringsSegmentID, IPC_RMID, NULL);
-	
-	shmdt(children);
-	shmctl(childrenSegmentID, IPC_RMID, NULL);
-	
-	shmdt(flags);
-	shmctl(flagsSegmentID, IPC_RMID, NULL);
-	
-	shmdt(turn);
-	shmctl(turnSegmentID, IPC_RMID, NULL);
-	
-	shmdt(childProcessGroup);
-	shmctl(childProcessGroupSegmentID, IPC_RMID, NULL);
+	shmdt(spm);
+	shmctl(spmSegmentID, IPC_RMID, NULL);
 }

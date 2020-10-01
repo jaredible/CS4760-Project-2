@@ -1,24 +1,30 @@
-CC	= gcc
-CFLAGS	= -g
-TARGET1	= master
-TARGET2	= palin
-OBJS1	= master.o
-OBJS2	= palin.o
+CC		= gcc
+CFLAGS		= -Wall -g
 
-.SUFFIXES: .c .o
+HEADER		= shared.h
 
-all: $(TARGET1) $(TARGET2)
+MASTER_SRC	= master.c
+MASTER_OBJ	= $(MASTER_SRC:.c=.o)
+MASTER		= master
 
-$(TARGET1): $(OBJS1)
-	$(CC) -o $@ $(OBJS1)
+OBJ		= shared.o
 
-$(TARGET2): $(OBJS2)
-	$(CC) -o $@ $(OBJS2)
+PALIN_SRC	= palin.c
+PALIN_OBJ	= $(PALIN_SRC:.c=.o)
+PALIN		= palin
 
-.c.o:
-	$(CC) -c $(CFLAGS) $<
+OUTPUT		= $(MASTER) $(PALIN)
+all: $(OUTPUT)
+
+$(MASTER): $(MASTER_OBJ) $(OBJ)
+	$(CC) $(CFLAGS) $(MASTER_OBJ) $(OBJ) -o $(MASTER)
+
+$(PALIN): $(PALIN_OBJ) $(OBJ)
+	$(CC) $(CFLAGS) $(PALIN_OBJ) $(OBJ) -o $(PALIN)
+
+%.o: %.c $(HEADER)
+	$(CC) $(CFLAGS) -c $*.c -o $*.o
 
 .PHONY: clean
-
 clean:
-	/bin/rm -f $(TARGET1) $(TARGET2) *.o *.out *.log
+	/bin/rm -f $(OUTPUT) *.o *.out *.log
