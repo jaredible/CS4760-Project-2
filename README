@@ -11,6 +11,11 @@ string.
 ./master -h
 ./master [-n x] [-s x] [-t time] infile
 
+To fix any issues:
+- check shared memory: ipcs -m | grep $USER
+- remove shared memory: ipcrm -m | grep $USER | awk ' { print $2 } ' | xargs ipcrm shm
+- kill all processes: pkill -u $USER
+
 ##### ADJUSTMENTS
 - Instead of implementing a shared clock, I just used time() in palin (Approved by Bhatia)
 

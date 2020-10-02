@@ -1,5 +1,16 @@
+/*
+ * Title:
+ * Filename: shared.c
+ * Usage: N/A
+ * Author(s): Jared Diehl (jmddnb@umsystem.edu)
+ * Date: October 2, 2020
+ * Description: Implementation of shared resources.
+ * Source(s):
+ */
+
 #include "shared.h"
 
+/* Prints an error message to stderr. */
 void error(char *fmt, ...) {
 	int n;
 	int size = 100;
@@ -28,6 +39,7 @@ void error(char *fmt, ...) {
 	fprintf(stderr, "%s: %s\n", programName, p);
 }
 
+/* Prints usage information. */
 void usage(int status) {
 	if (status != EXIT_SUCCESS) fprintf(stderr, "Try '%s -h' for more information.\n", programName);
 	else {
@@ -45,12 +57,14 @@ void usage(int status) {
 	exit(status);
 }
 
+/* Creates or clears a file given its path "path". */
 void touchFile(char* path) {
 	FILE* fp = fopen(path, "w");
 	if (fp == NULL) crash("Failed to touch file");
 	fclose(fp);
 }
 
+/* Allocates and clears shared memory. */
 void allocateSPM() {
 	logOutput("output.log", "%s: Allocating shared memory\n", getFormattedTime());
 	attachSPM();
@@ -58,26 +72,31 @@ void allocateSPM() {
 	attachSPM();
 }
 
+/* Attaches to shared memory. */
 void attachSPM() {
 	spmKey = ftok("Makefile", 'p');
 	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProgramMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) crash("Failed to allocate shared memory for SPM");
 	else spm = (struct SharedProgramMemory*) shmat(spmSegmentID, NULL, 0);
 }
 
+/* Releases shared memory. */
 void releaseSPM() {
 	if (spm != NULL) if (shmdt(spm)) crash("Failed to release SPM");
 }
 
+/* Deletes shared memory. */
 void deleteSPM() {
 	if (spmSegmentID > 0) if (shmctl(spmSegmentID, IPC_RMID, NULL) < 0) crash("Failed to delete SPM");
 }
 
+/* Releases and deletes shared memory. */
 void removeSPM() {
 	logOutput("output.log", "%s: Removing shared memory\n", getFormattedTime());
 	releaseSPM();
 	deleteSPM();
 }
 
+/* Outputs a formatted string "fmt" to a file given its path "path". */
 void logOutput(char* path, char* fmt, ...) {
 	FILE* fp = fopen(path, "a+");
 	
@@ -95,6 +114,7 @@ void logOutput(char* path, char* fmt, ...) {
 	fclose(fp);
 }
 
+/* Returns the current time on the system. */
 char* getFormattedTime() {
 	char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char));
 	time_t now = time(NULL);
@@ -102,6 +122,7 @@ char* getFormattedTime() {
 	return formattedTime;
 }
 
+/* Removes newline from a string "s". */
 void removeNewline(char* s) {
 	while (*s) {
 		if (*s == '\n') *s = '\0';
@@ -109,6 +130,7 @@ void removeNewline(char* s) {
 	}
 }
 
+/* Using a formatted string, prints an error and exits abnormally. */
 void crash(char* fmt, ...) {
 	int n = 4096;
 	char buf[n];
@@ -125,6 +147,7 @@ void crash(char* fmt, ...) {
 	exit(EXIT_FAILURE);
 }
 
+/* Same as strcpy, but uses a formatted string. */
 void strfcpy(char* src, char* fmt, ...) {
 	int n = 4096;
 	char buf[n];
