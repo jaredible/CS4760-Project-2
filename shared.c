@@ -52,7 +52,7 @@ void touchFile(char* path) {
 }
 
 void allocateSPM() {
-	logOutput("output.log", "Allocating shared memory\n");
+	logOutput("output.log", "%s: Allocating shared memory\n", getFormattedTime());
 	attachSPM();
 	releaseSPM();
 	attachSPM();
@@ -73,7 +73,7 @@ void deleteSPM() {
 }
 
 void removeSPM() {
-	logOutput("output.log", "Removing shared memory\n");
+	logOutput("output.log", "%s: Removing shared memory\n", getFormattedTime());
 	releaseSPM();
 	deleteSPM();
 }
@@ -83,7 +83,8 @@ void logOutput(char* path, char* fmt, ...) {
 	
 	if (fp == NULL) crash("Failed to open file for logging output");
 	
-	char buf[4096];
+	int n = 4096;
+	char buf[n];
 	va_list args;
 	
 	va_start(args, fmt);
@@ -109,27 +110,29 @@ void removeNewline(char* s) {
 }
 
 void crash(char* fmt, ...) {
-	char buf[4096];
+	int n = 4096;
+	char buf[n];
 	va_list args;
 	
 	va_start(args, fmt);
 	vsprintf(buf, fmt, args);
 	va_end(args);
 	
-	char buff[4096];
-	sprintf(buff, "%s: %s", programName, buf);
+	char buff[n];
+	snprintf(buff, n, "%s: %s", programName, buf);
 	
 	perror(buff);
 	exit(EXIT_FAILURE);
 }
 
 void strfcat(char* src, char* fmt, ...) {
-	char buf[4096];
+	int n = 4096;
+	char buf[n];
 	va_list args;
 	
 	va_start(args, fmt);
 	vsprintf(buf, fmt, args);
 	va_end(args);
 	
-	strcat(src, buf);
+	strncat(src, buf, n);
 }

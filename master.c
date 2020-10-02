@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 	
 	removeSPM();
 	
-	return EXIT_SUCCESS;
+	return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int loadStrings(char* path) {
@@ -157,7 +157,7 @@ void spawnChild(const int i) {
 }
 
 void signalHandler(int s) {
-	char message[4096];
+	char message[8192];
 	strfcat(message, "%s: Exiting due to %s signal\n", getFormattedTime(), s == SIGALRM ? "timeout" : "interrupt");
 	fprintf(stderr, message);
 	logOutput("output.log", message);

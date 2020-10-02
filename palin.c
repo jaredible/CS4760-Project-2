@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, signalHandler);
 	signal(SIGUSR1, signalHandler);
 	
-	if (argc < 2) crash("No arguments supplied");
+	if (argc < 2) crash("No argument supplied for id");
 	else id = atoi(argv[1]);
 	
 	srand(time(NULL) + id);
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 	
 	process(id);
 	
-	return EXIT_FAILURE;
+	return EXIT_SUCCESS;
 }
 
 void process(const int i) {
@@ -89,8 +89,8 @@ bool isPalindrome(char* string) {
 }
 
 void signalHandler(int s) {
-	char message[4096];
-	strfcat(message, "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
+	char message[8192];
+	logOutput("output.log", "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
 	fprintf(stderr, message);
 	logOutput("output.log", message);
 	exit(EXIT_FAILURE);
