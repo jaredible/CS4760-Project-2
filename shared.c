@@ -1,5 +1,50 @@
 #include "shared.h"
 
+void error(char *fmt, ...) {
+	int n;
+	int size = 100;
+	char *p, *np;
+	va_list ap;
+	
+	if ((p = malloc(size)) == NULL) return;
+	
+	while (true) {
+		va_start(ap, fmt);
+		n = vsnprintf(p, size, fmt, ap);
+		va_end(ap);
+		
+		if (n < 0) return;
+		
+		if (n < size) break;
+		
+		size = n + 1;
+		
+		if ((np = realloc(p, size)) == NULL) {
+			free(p);
+			return;
+		} else p = np;
+	}
+	
+	fprintf(stderr, "%s: %s\n", programName, p);
+}
+
+void usage(int status) {
+	if (status != EXIT_SUCCESS) fprintf(stderr, "Try '%s -h' for more information.\n", programName);
+	else {
+		printf("NAME\n");
+		printf("       %s - palindrome finder", programName);
+		printf("\nUSAGE\n");
+		printf("       %s [-h]\n", programName);
+		printf("       %s [-n x] [-s x] [-t time] infile", programName);
+		printf("\nDESCRIPTION\n");
+		printf("       -h       : Print a help message or usage, and exit\n");
+		printf("       -n x     : Maximum total of child processes (default 4)\n");
+		printf("       -s x     : Number of children allowed to exist concurrently (default 2)\n");
+		printf("       -t time  : Time, in seconds, after which the program will terminate (default 100)\n");
+	}
+	exit(status);
+}
+
 void touchFile(char* path) {
 	FILE* fp = fopen(path, "w");
 	if (fp == NULL) crash("Failed to touch file");
@@ -7,6 +52,7 @@ void touchFile(char* path) {
 }
 
 void allocateSPM() {
+	logOutput("output.log", "Allocating shared memory\n");
 	attachSPM();
 	releaseSPM();
 	attachSPM();
@@ -14,13 +60,22 @@ void allocateSPM() {
 
 void attachSPM() {
 	spmKey = ftok("Makefile", 'p');
-	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProcessMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) crash("Failed to allocate shared memory for SPM");
-	else spm = (struct SharedProcessMemory*) shmat(spmSegmentID, NULL, 0);
+	if ((spmSegmentID = shmget(spmKey, sizeof(struct SharedProgramMemory), IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) crash("Failed to allocate shared memory for SPM");
+	else spm = (struct SharedProgramMemory*) shmat(spmSegmentID, NULL, 0);
 }
 
 void releaseSPM() {
 	if (spm != NULL) if (shmdt(spm)) crash("Failed to release SPM");
+}
+
+void deleteSPM() {
 	if (spmSegmentID > 0) if (shmctl(spmSegmentID, IPC_RMID, NULL) < 0) crash("Failed to delete SPM");
+}
+
+void removeSPM() {
+	logOutput("output.log", "Removing shared memory\n");
+	releaseSPM();
+	deleteSPM();
 }
 
 void logOutput(char* path, char* fmt, ...) {

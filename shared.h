@@ -33,7 +33,7 @@
 
 enum state { idle, want_in, in_cs };
 
-struct SharedProcessMemory {
+struct SharedProgramMemory {
 	size_t total;
 	enum state flags[TOTAL_PROCESSES_MAX];
 	enum state turn;
@@ -45,12 +45,16 @@ char* programName;
 
 int spmKey;
 int spmSegmentID;
-struct SharedProcessMemory* spm;
+struct SharedProgramMemory* spm;
 
+void error(char *fmt, ...);
+void usage(int);
 void touchFile(char*);
 void allocateSPM();
 void attachSPM();
 void releaseSPM();
+void deleteSPM();
+void removeSPM();
 void logOutput(char*, char*, ...);
 char* getFormattedTime();
 void removeNewline(char*);
