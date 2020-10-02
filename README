@@ -1,20 +1,25 @@
 # CS4760 Project 2: Concurrent UNIX Processes and Shared Memory
 
+##### DESCRIPTION
+Write a program to separate a list of strings, from a file, into 2 other files, and log
+program execution. For each string, the program will check if it's a palindrome. Strings
+that are palindromes are outputted to "palin.out", otherwise "nopalin.out". Program execution
+is logged to "output.log". Regarding the input file, each line should contain only a single
+string.
+
+##### EXECUTION
+./master -h
+./master [-n x] [-s x] [-t time] infile
+
 ##### ADJUSTMENTS
 - Instead of implementing a shared clock, I just used time() in palin (Approved by Bhatia)
 
 ##### ISSUES
-- Upon signaling, a child process may not terminate. I'm terminating them using a PGID.
-  After forking, a child process is assigned a PGID. So, since it's possible to signal
-  between the time of forking and assigning the PGID to the child process, the child process
-  may never terminate properly. Although, all child processes will be terminated most of
-  the time during testing.
-
-##### EXECUTION
-```
-./master -h
-./master [-n x] [-s x] [-t time] infile
-```
+- Upon signaling, a child process may not terminate. I'm terminating child processes using
+  a PGID, which each one is assigned. After forking, a child process is assigned a PGID. All
+  child processes have the same PGID. Since it's possible to signal between the time of forking
+  and assigning the PGID to the child process, the child process won't terminate properly.
+  Although, all child processes will be terminated most of the time during testing.
 
 ##### CHANGELOG
 commit ded9b1a4db57af5239768c126abee70f5b2fc028
