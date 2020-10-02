@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
 	touchFile("nopalin.out");
 	touchFile("output.log");
 	
+	bool ok = true;
+	
 	while (true) {
 		int c = getopt(argc, argv, "hn:s:t:");
 		
@@ -38,60 +40,48 @@ int main(int argc, char** argv) {
 		
 		switch (c) {
 			case 'h':
-				printf("NAME\n");
-				printf("       %s - palindrome finder", argv[0]);
-				printf("\nUSAGE\n");
-				printf("       %s [-h]\n", argv[0]);
-				printf("       %s [-n x] [-s x] [-t time] infile", argv[0]);
-				printf("\nDESCRIPTION\n");
-				printf("       -h       : Print a help message or usage, and exit\n");
-				printf("       -n x     : Maximum total of child processes\n");
-				printf("       -s x     : Number of children allowed to exist concurrently\n");
-				printf("       -t time  : Time, in seconds, after which the program will terminate\n");
-				exit(EXIT_SUCCESS);
+				usage(EXIT_SUCCESS);
 			case 'n':
-				n = atoi(optarg);
-				if (n < 0) {
-					fprintf(stderr, "Negative arguments are not valid\n");
-					exit(EXIT_FAILURE);
+				if (!isdigit(*optarg) || (n = atoi(optarg)) < 0) {
+					error("invalid max total processes '%s'", optarg);
+					ok = false;
 				}
 				break;
 			case 's':
-				s = atoi(optarg);
-				if (s < 0) {
-					fprintf(stderr, "Cannot spawn a negative number of children\n");
-					exit(EXIT_FAILURE);
+				if (!isdigit(*optarg) || (s = atoi(optarg)) < 0) {
+					error("invalid concurrent processes '%s'", optarg);
+					ok = false;
 				}
 				break;
 			case 't':
-				t = atoi(optarg);
-				if (t < 0) {
-					fprintf(stderr, "Master cannot have a run duration of negative time\n");
-					exit(EXIT_FAILURE);
-				} else if (t == 0) {
-					exit(EXIT_SUCCESS);
+				if (!isdigit(*optarg) || (t = atoi(optarg)) < 0) {
+					error("invalid timeout time '%s'", optarg);
+					ok = false;
 				}
 				break;
 			default:
-				fprintf(stderr, "Default getopt statement\n");
-				exit(EXIT_FAILURE);
+				ok = false;
 		}
 	}
 	
+	if (!ok) usage(EXIT_FAILURE);
+	
+	if (argv[optind] == NULL) {
+		error("missing input file");
+		usage(EXIT_FAILURE);
+	}
+	
+	if (t == 0) exit(EXIT_SUCCESS);
+	
 	allocateSPM();
 	
-	// TODO
-	char* path = "strings.in";
-	if (argv[optind] != NULL) path = argv[optind];
-	int c = loadStrings(path);
+	int c = loadStrings(argv[optind]);
 	n = MIN(c, TOTAL_PROCESSES_MAX);
 	s = MIN(s, n);
 	t = MIN(t, PROGRAM_DURATION_MAX);
 	
 	spm->total = n;
 	setupTimer(t);
-	
-//	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
 	
 	int i = 0;
 	int j = n;
@@ -107,7 +97,7 @@ int main(int argc, char** argv) {
 		nn--;
 	}
 	
-	releaseSPM();
+	removeSPM();
 	
 	return EXIT_SUCCESS;
 }
@@ -173,6 +163,6 @@ void signalHandler(int s) {
 	logOutput("output.log", message);
 	killpg(spm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
 	while (wait(NULL) > 0);
-	releaseSPM();
+	removeSPM();
 	exit(EXIT_SUCCESS);
 }
