@@ -1,1 +1,20 @@
 # CS4760 Project 2: Concurrent UNIX Processes and Shared Memory
+
+##### ADJUSTMENTS
+- Instead of implementing a shared clock, I just used time() in palin (Approved by Bhatia)
+
+##### ISSUES
+- Upon signaling, a child process may not terminate. I'm terminating them using a PGID.
+  After forking, a child process is assigned a PGID. So, since it's possible to signal
+  between the time of forking and assigning the PGID to the child process, the child process
+  may never terminate properly. Although, all child processes will be terminated most of
+  the time during testing.
+
+##### EXECUTION
+```
+./master -h
+./master [-n x] [-s x] [-t time] infile
+```
+
+##### CHANGELOG
+
