@@ -17,4 +17,206 @@
 ```
 
 ##### CHANGELOG
+commit ded9b1a4db57af5239768c126abee70f5b2fc028
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 12:59:59 2020 -0500
 
+    Updated README
+
+commit a06fd14f4e693cb7282838e00ff12833dd2c42a5
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 12:21:43 2020 -0500
+
+    Fixed another bug
+
+commit 16d7e303ce73dd4e75a6b6188d8a95b26a8cf9ef
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 11:41:00 2020 -0500
+
+    Fixed char overflow
+
+commit f0236a36b8a954e31cde557a8b5f9bbd0245a7c1
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 10:55:58 2020 -0500
+
+    Modularized
+
+commit 11882870c438e8314a130bb50e6bfe109c7cb1f3
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 10:55:06 2020 -0500
+
+    Updated options
+
+commit e4270a81d1f18606168586fb6b401971101469d3
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 10:20:57 2020 -0500
+
+    Updated logging
+
+commit 03b6a83fb3c7c233698ccc5dbe3853ae67abb36f
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 10:20:33 2020 -0500
+
+    Added more
+
+commit 92b87b606b6612ba952530ada91cec747877845c
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 22:12:58 2020 -0500
+
+    Updated test
+
+commit 5fd8f81ddb1c8f716912ac67376c0cbd60efe8f8
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 20:37:12 2020 -0500
+
+    Updated defaults
+
+commit 7ef925b69055d74c9e4a38e826e6dd4e6874f160
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 19:48:05 2020 -0500
+
+    Updated logging
+
+commit ad484e7ceb9f86832d580081ee226ad5bbba235d
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 19:47:42 2020 -0500
+
+    Updated strings.in
+
+commit 50f6701117e289950ea84c5dd77dcda17b5dc054
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 18:38:21 2020 -0500
+
+    Removed test
+
+commit 16236b6773abcd17911484c81ea6deb8a245e982
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 18:37:04 2020 -0500
+
+    Updated
+
+commit 5ce6a818a534358e003400a0584749dd4b024d5c
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 18:35:18 2020 -0500
+
+    Added test
+
+commit d2ce1c54f595c99664513d3a6ab206017a270028
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 02:46:37 2020 -0500
+
+    Added default infile
+
+commit 45263b14b1d272694289fabbd35d5ecfcae878ea
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Thu Oct 1 02:44:18 2020 -0500
+
+    Minimized
+
+commit a14df97a004baaae92727e804534bec78461e32b
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Wed Sep 30 21:37:54 2020 -0500
+
+    Added shared library
+
+commit 32b02d622271afe174d5e35dcc591e2ae3825ce5
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Wed Sep 30 20:27:47 2020 -0500
+
+    Renamed variables to improve readability
+
+commit 378bbc48214e3078b8555b61c7e46d0546c3311b
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Tue Sep 29 22:39:22 2020 -0500
+
+    Removed some commented code
+
+commit 1f70ff45693d4cf3a472a766d0fac6ce907514b2
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Tue Sep 29 18:25:18 2020 -0500
+
+    Refactored deleting log files
+
+commit c08e2f9fd8e1733c726eb5e62270be5b4dc70dcd
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Tue Sep 29 18:24:42 2020 -0500
+
+    Included removing log files
+
+commit 511ba326a32f5ee41d84b20cfa65e3198f80097d
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Tue Sep 29 10:03:42 2020 -0500
+
+    Initial prototype
+
+commit 03591cbd28fd1d9abc67e58c7bc893b1e06d8096
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 15:54:04 2020 -0500
+
+    Added more option checking
+
+commit 4961d4003e4de5da0ea7f7b6f356aba26427f7b6
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 15:38:03 2020 -0500
+
+    Added more option functionality, usage, and error
+
+commit c7acab15e620525127e3eec439f6a09fa095d9c4
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 15:12:01 2020 -0500
+
+    Implemented checking for options
+
+commit de9269b840ca2645be300a220171ee90e952b2b5
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 15:03:41 2020 -0500
+
+    Implemented palindrome function
+
+commit 4b0c5b804b5979149972493d0ab23832664a7196
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:55:26 2020 -0500
+
+    palin.c
+
+commit 2f0d67e883cad5b7060bc08012cdd4698a186a47
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:35:07 2020 -0500
+
+    Ignored executable and object files
+
+commit 4cc2f2ae99bb8e19304b95559a9b0d09343ebdc9
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:32:27 2020 -0500
+
+    Implemented palindromes test file
+
+commit 7a5dd15606f27c92ab26d8a798dfd3bf23d61a0d
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:16:33 2020 -0500
+
+    Implemented functionality
+
+commit 5837b47cb1d39c1f962b5c8c942de57ea1568fc9
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:07:54 2020 -0500
+
+    Added README
+
+commit fe3fb620b777eafe89c239481fe0cf1b2421da19
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:05:30 2020 -0500
+
+    Added main function
+
+commit 75258126b55959fdfc7f9a71b75ef64d63258154
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:04:34 2020 -0500
+
+    Added main function
+
+commit db8e4c2218a7c6cd6b6228ed1223f260b1253e7a
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Sat Sep 19 13:02:17 2020 -0500
+
+    Initial commit
