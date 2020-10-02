@@ -30,15 +30,11 @@ clean:
 	/bin/rm -f $(OUTPUT) *.o *.out *.log
 
 strings.in:
-	echo a > strings.in
-	echo aA >> strings.in
-	echo ab >> strings.in
-	echo a0A >> strings.in
-	echo a0 >> strings.in
-	echo sTaTs >> strings.in
-	echo process >> strings.in
-	echo rAcEcAr >> strings.in
-	echo not a racecar >> strings.in
+	echo "a" > strings.in
+	echo "ab" >> strings.in
+	echo "a1A" >> strings.in
+	echo "" >> strings.in
+	echo "aB0Ba" >> strings.in
 
 test: all strings.in
 	./master -n 10 -s 4 -t 4 strings.in
