@@ -89,9 +89,11 @@ bool isPalindrome(char* string) {
 }
 
 void signalHandler(int s) {
-	char message[8192];
-	logOutput("output.log", "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
-	fprintf(stderr, message);
-	logOutput("output.log", message);
-	exit(EXIT_FAILURE);
+	if (s == SIGTERM || s == SIGUSR1) {
+		char message[8196];
+		strfcpy(message, "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
+		fprintf(stderr, message);
+		logOutput("output.log", message);
+		exit(EXIT_FAILURE);
+	}
 }

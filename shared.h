@@ -59,6 +59,6 @@ void logOutput(char*, char*, ...);
 char* getFormattedTime();
 void removeNewline(char*);
 void crash(char*, ...);
-void strfcat(char*, char*, ...);
+void strfcpy(char*, char*, ...);
 
 #endif

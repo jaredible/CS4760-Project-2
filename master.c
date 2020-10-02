@@ -157,11 +157,11 @@ void spawnChild(const int i) {
 }
 
 void signalHandler(int s) {
-	char message[8192];
-	strfcat(message, "%s: Exiting due to %s signal\n", getFormattedTime(), s == SIGALRM ? "timeout" : "interrupt");
+	char message[4096];
+	strfcpy(message, "%s: Exiting due to %s signal\n", getFormattedTime(), s == SIGALRM ? "timeout" : "interrupt");
 	fprintf(stderr, message);
 	logOutput("output.log", message);
-	killpg(spm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
+	killpg(spm->pgid, SIGTERM);//s == SIGALRM ? SIGUSR1 : SIGTERM);
 	while (wait(NULL) > 0);
 	removeSPM();
 	exit(EXIT_SUCCESS);

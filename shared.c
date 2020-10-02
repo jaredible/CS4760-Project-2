@@ -125,7 +125,7 @@ void crash(char* fmt, ...) {
 	exit(EXIT_FAILURE);
 }
 
-void strfcat(char* src, char* fmt, ...) {
+void strfcpy(char* src, char* fmt, ...) {
 	int n = 4096;
 	char buf[n];
 	va_list args;
@@ -134,5 +134,5 @@ void strfcat(char* src, char* fmt, ...) {
 	vsprintf(buf, fmt, args);
 	va_end(args);
 	
-	strncat(src, buf, n);
+	strncpy(src, buf, n);
 }
