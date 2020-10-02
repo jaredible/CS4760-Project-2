@@ -7,6 +7,8 @@ void signalHandler(int);
 int id;
 
 int main(int argc, char** argv) {
+	programName = argv[0];
+	
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 	
@@ -87,11 +89,6 @@ bool isPalindrome(char* string) {
 }
 
 void signalHandler(int s) {
-//	char buf[4096];
-//	strfcat(buf, "palin: Process %d exiting due to %s signal\n", id, s == SIGUSR1 ? "timeout" : "interrupt");
-//	printf("%s", buf);
-//	exit(1);
-//	crash(buf);
-	printf("palin: Process %d exiting due to %s signal\n", id, s == SIGUSR1 ? "timeout" : "interrupt");
+	logOutput("output.log", "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
 	exit(EXIT_FAILURE);
 }

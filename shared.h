@@ -39,17 +39,20 @@ struct SharedProcessMemory {
 	pid_t pgid;
 };
 
+char* programName;
+
 int spmKey;
 int spmSegmentID;
 struct SharedProcessMemory* spm;
 
+void touchFile(char*);
 void allocateSPM();
 void attachSPM();
 void releaseSPM();
 void logOutput(char*, char*, ...);
 char* getFormattedTime();
 void removeNewline(char*);
-void crash(char*);
+void crash(char*, ...);
 void strfcat(char*, char*, ...);
 
 #endif

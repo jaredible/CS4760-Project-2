@@ -20,14 +20,16 @@ int s = 2;
 int t = PROGRAM_DURATION_MAX;
 
 int main(int argc, char** argv) {
+	programName = argv[0];
+	
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 	
 	signal(SIGINT, signalHandler);
 	
-	remove("palin.out");
-	remove("nopalin.out");
-	remove("output.log");
+	touchFile("palin.out");
+	touchFile("nopalin.out");
+	touchFile("output.log");
 	
 	while (true) {
 		int c = getopt(argc, argv, "hn:s:t:");
@@ -79,7 +81,7 @@ int main(int argc, char** argv) {
 	allocateSPM();
 	
 	// TODO
-	char* path = "infile";
+	char* path = "strings.in";
 	if (argv[optind] != NULL) path = argv[optind];
 	int c = loadStrings(path);
 	n = MIN(c, TOTAL_PROCESSES_MAX);
@@ -89,7 +91,7 @@ int main(int argc, char** argv) {
 	spm->total = n;
 	setupTimer(t);
 	
-	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
+//	printf("stringCount: %d, n: %d, s: %d, t: %d, total: %d\n", c, n, s, t, (int) spm->total);
 	
 	int i = 0;
 	int j = n;
@@ -100,7 +102,7 @@ int main(int argc, char** argv) {
 	
 	while (nn > 0) {
 		wait(NULL);
-		logOutput("output.log", "Process %d finished, processes in system %d\n", n - nn, nn);
+		logOutput("output.log", "%s: Process %d finished\n", getFormattedTime(), n - nn);
 		if (i < j) spawnChild(i++);
 		nn--;
 	}
@@ -112,7 +114,7 @@ int main(int argc, char** argv) {
 
 int loadStrings(char* path) {
 	FILE* fp = fopen(path, "r");
-	if (fp == NULL) crash("fopen: Failed to open file for loading strings");
+	if (fp == NULL) crash("Failed to open file for loading strings");
 	
 	int i = 0;
 	char* line = NULL;
@@ -133,7 +135,7 @@ void setupTimer(const int t) {
 	struct sigaction action;
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = signalHandler;
-	if (sigaction(SIGALRM, &action, NULL) != 0) crash("sigaction");
+	if (sigaction(SIGALRM, &action, NULL) != 0) crash("Failed to set signal action for timer");
 	
 	struct itimerval timer;
 	timer.it_value.tv_sec = t;
@@ -142,19 +144,19 @@ void setupTimer(const int t) {
 	timer.it_interval.tv_sec = 0;
 	timer.it_interval.tv_usec = 0;
 	
-	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) crash("setitimer");
+	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) crash("Failed to set timer");
 }
 
 void spawnChild(const int i) {
 	pid_t pid = fork();
 	
-	if (pid == -1) crash("fork: Failed to create a child process for palin");
+	if (pid == -1) crash("Failed to create a child process for palin");
 	
 	if (pid == 0) {
 		if (i == 0) spm->pgid = getpid();
 		setpgid(0, spm->pgid);
 		
-		logOutput("output.log", "Process %d starting, processes in system: %d\n", i, i + 1);
+		logOutput("output.log", "%s: Process %d starting\n", getFormattedTime(), i);
 		
 		char id[256];
 		sprintf(id, "%d", i);
@@ -165,15 +167,9 @@ void spawnChild(const int i) {
 }
 
 void signalHandler(int s) {
-	printf("master: Exiting due to %s signal\n", s == SIGALRM ? "timeout" : "interrupt");
+	logOutput("output.log", "%s: Exiting due to %s signal\n", getFormattedTime(), s == SIGALRM ? "timeout" : "interrupt");
 	killpg(spm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
-	int i;
-	while (wait(NULL) > 0) {
-		i = 1e9;
-		while (i-- > 0);
-		fprintf(stderr, "wait: Child process took too long to terminate\n");
-		break;
-	}
+	while (wait(NULL) > 0);
 	releaseSPM();
 	exit(EXIT_SUCCESS);
 }
