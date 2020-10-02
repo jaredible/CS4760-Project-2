@@ -15,8 +15,8 @@ void setupTimer(int);
 void spawnChild(int);
 void signalHandler(int);
 
-int n = 4;
-int s = 2;
+int n = TOTAL_PROCESSES_MAX_DEFAULT;
+int s = CONCURRENT_PROCESSES_DEFAULT;
 int t = PROGRAM_DURATION_MAX;
 
 int main(int argc, char** argv) {

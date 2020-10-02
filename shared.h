@@ -18,6 +18,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#define TOTAL_PROCESSES_MAX_DEFAULT 4
+#define CONCURRENT_PROCESSES_DEFAULT 2
 #define PROGRAM_DURATION_MAX 100
 #define TOTAL_PROCESSES_MAX 20
 #define STRING_LENGTH_MAX 256
