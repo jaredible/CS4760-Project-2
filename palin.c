@@ -130,7 +130,7 @@ bool isPalindrome(char* string) {
 void signalHandler(int s) {
 	if (s == SIGTERM || s == SIGUSR1) {
 		/* Initialize a message. */
-		char message[8196];
+		char message[4096];
 		strfcpy(message, "%s: Process %d exiting due to %s signal\n", getFormattedTime(), id, s == SIGUSR1 ? "timeout" : "interrupt");
 		
 		/* Output that message. */
