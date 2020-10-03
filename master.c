@@ -220,7 +220,7 @@ void spawnChild(const int i) {
 
 /* Responsible for handling Ctrl+C and timeout signals. */
 void signalHandler(int s) {
-	/* If flag is set, wait for just a bit. */
+	/* If flag is set, wait for just a bit so the child process has time to set a PGID. */
 	if (flag) sleep(1);
 	
 	/* Initialize a message. */
