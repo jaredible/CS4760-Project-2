@@ -27,6 +27,9 @@ int n = TOTAL_PROCESSES_MAX_DEFAULT;
 int s = CONCURRENT_PROCESSES_DEFAULT;
 int t = PROGRAM_DURATION_MAX;
 
+/* Flag for temporarily disabling interrupt handler. */
+bool flag = false;
+
 int main(int argc, char** argv) {
 	/* Set program name so it can be used globally. */
 	programName = argv[0];
@@ -183,26 +186,43 @@ void setupTimer(const int t) {
 
 /* Spawns a child given an index "i". */
 void spawnChild(const int i) {
+	/* Fork the current process. */
 	pid_t pid = fork();
 	
+	/* Check if fork'ing failed. */
 	if (pid == -1) crash("Failed to create a child process for palin");
 	
+	/* Check if is child process. */
 	if (pid == 0) {
+		/* Enable flag to slow interrupt handler. */
+		flag = true;
+		
 		if (i == 0) spm->pgid = getpid();
 		setpgid(0, spm->pgid);
 		
+		/* Disable flag to continue interrupt handler. */
+		flag = false;
+		
+		/* Log the time this child process is starting. */
 		logOutput("output.log", "%s: Process %d starting\n", getFormattedTime(), i);
 		
+		/* Convert integer "i" to string "id". */
 		char id[256];
 		sprintf(id, "%d", i);
 		
+		/* Execute child process "palin". */
 		execl("./palin", "palin", id, (char*) NULL);
+		
+		/* Exit successfully. */
 		exit(EXIT_SUCCESS);
 	}
 }
 
 /* Responsible for handling Ctrl+C and timeout signals. */
 void signalHandler(int s) {
+	/* If flag is set, wait for just a bit. */
+	if (flag) sleep(1);
+	
 	/* Initialize a message. */
 	char message[4096];
 	strfcpy(message, "%s: Exiting due to %s signal\n", getFormattedTime(), s == SIGALRM ? "timeout" : "interrupt");
