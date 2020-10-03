@@ -19,6 +19,7 @@ To fix any issues:
 ##### ADJUSTMENTS
 - Instead of implementing a shared clock, I just used time() in palin (Approved by Bhatia)
 - Utilized my own custom shared library
+- Implemented a test in Makefile
 
 ##### ISSUES
 - Upon signaling, a child process may not terminate. I'm terminating child processes using
