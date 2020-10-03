@@ -48,11 +48,11 @@ enum state { idle, want_in, in_cs };
 
 /* Data structure that's used to communicate between all processes. */
 struct SharedProgramMemory {
-	size_t total;
-	enum state flags[TOTAL_PROCESSES_MAX];
-	enum state turn;
-	char strings[TOTAL_PROCESSES_MAX][STRING_LENGTH_MAX];
-	pid_t pgid;
+	size_t total; /* Total processes to ever be in system. */
+	enum state flags[TOTAL_PROCESSES_MAX]; /* Array of all child process' mutual exclusion state. */
+	enum state turn /* Index of process that is writing to log file. */;
+	char strings[TOTAL_PROCESSES_MAX][STRING_LENGTH_MAX]; /* Strings loaded from input. */
+	pid_t pgid; /* Child process group ID. */
 };
 
 /* Name of current program executing. */
