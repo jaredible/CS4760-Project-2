@@ -29,6 +29,54 @@ To fix any issues:
   Although, all child processes will be terminated most of the time during testing.
 
 ##### CHANGELOG
+commit 7584aa3108ff7dd72e37061dc0c0322110e7eb42
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 23:00:57 2020 -0500
+
+    Fixed signal bug
+
+commit 14b5652b190fd0349a0dd55e853e07b226d1d875
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 22:59:08 2020 -0500
+
+    Fixed buffer overflow
+
+commit f8007e7dc555c98fed9101124ba7f3606393c7e6
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 22:58:15 2020 -0500
+
+    Added comments to struct
+
+commit 6a75916d6477b9d37eac14ffb601b2334b426ab1
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 20:20:02 2020 -0500
+
+    Updated
+
+commit f125432d3d02c7b01dcfdd11d84d200bba6ebbde
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 18:34:12 2020 -0500
+
+    Updated README
+
+commit 111e6e1020d8607ebaf530d28885a97078aa3a1e
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 18:29:17 2020 -0500
+
+    Added comments
+
+commit a08d693f9032f83d8c341d67e429d52a9b79bdf2
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 13:27:41 2020 -0500
+
+    Updated README
+
+commit 8457e2da0937a4ed1d34a3bd5357e9069ecd57e3
+Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
+Date:   Fri Oct 2 13:03:35 2020 -0500
+
+    Added changelog
+
 commit ded9b1a4db57af5239768c126abee70f5b2fc028
 Author: Jared Diehl <diehl@hoare7.cs.umsl.edu>
 Date:   Fri Oct 2 12:59:59 2020 -0500
